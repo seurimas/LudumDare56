@@ -1,0 +1,30 @@
+[package]
+name = "LudumDare56"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = { version = "0.14", features = ["wav"] }
+rand = "0.8"
+bevy_asset_loader = { version = "0.20.1", features = ["2d", "standard_dynamic_assets"] }
+bevy_common_assets = { version = "0.11", features = ["ron"] }
+serde = { version = "1.0", features = ["derive"] }
+unicode-segmentation = "1.10.1"
+postcard = { version = "1.0.4", features = ["alloc"] }
+arboard = { version = "3.2.0", optional = true }
+native-dialog = { version = "0.6.3", optional = true }
+web-sys = { version = "0.3.61", optional = true }
+wasm-bindgen = { version = "0.2.92", optional = true }
+lazy_static = "1.4.0"
+
+[features]
+default = ["non-js"]
+non-js = ["arboard", "native-dialog"]
+js = ["web-sys", "wasm-bindgen"]
+
+# Enable max optimizations for dependencies, but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
+
