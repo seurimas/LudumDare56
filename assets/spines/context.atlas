@@ -1,9 +1,12 @@
 context.png
-size:254,132
+size:284,132
 filter:Linear,Linear
 pma:true
 BackContextItem
 bounds:132,10,120,120
 offsets:4,4,128,128
+Candle
+bounds:254,51,28,79
+offsets:50,16,128,128
 ContextItem
 bounds:2,2,128,128

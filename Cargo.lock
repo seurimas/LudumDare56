@@ -10,6 +10,7 @@ dependencies = [
  "bevy",
  "bevy_asset_loader",
  "bevy_common_assets",
+ "bevy_quickmenu",
  "bevy_spine",
  "lazy_static",
  "native-dialog",
@@ -880,6 +881,13 @@ name = "bevy_ptr"
 version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61baa1bdc1f4a7ac2c18217570a7cc04e1cd54d38456e91782f0371c79afe0a8"
+
+[[package]]
+name = "bevy_quickmenu"
+version = "0.5.0"
+dependencies = [
+ "bevy",
+]
 
 [[package]]
 name = "bevy_reflect"

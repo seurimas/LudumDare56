@@ -27,11 +27,16 @@ pub struct GameAssets {
     pub context_atlas: Handle<Atlas>,
     #[asset(path = "spines/context.json")]
     pub context_json: Handle<SkeletonJson>,
+    #[asset(path = "spines/desk.atlas")]
+    pub desk_atlas: Handle<Atlas>,
+    #[asset(path = "spines/desk.json")]
+    pub desk_json: Handle<SkeletonJson>,
 }
 
 #[derive(Resource)]
 pub struct Skeletons {
     pub context: Handle<SkeletonData>,
+    pub desk: Handle<SkeletonData>,
 }
 
 fn create_skeletons(
@@ -43,5 +48,9 @@ fn create_skeletons(
         SkeletonData::new_from_json(assets.context_json.clone(), assets.context_atlas.clone());
     let context = skeletons.add(context_skeleton);
 
-    commands.insert_resource(Skeletons { context });
+    let desk_skeleton =
+        SkeletonData::new_from_json(assets.desk_json.clone(), assets.desk_atlas.clone());
+    let desk = skeletons.add(desk_skeleton);
+
+    commands.insert_resource(Skeletons { context, desk });
 }

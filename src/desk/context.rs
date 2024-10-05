@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+use super::DeskItem;
+
 pub const LEFT_TRACK: usize = 0;
 pub const RIGHT_TRACK: usize = 1;
 pub const MIDDLE_TRACK: usize = 2;
@@ -17,7 +19,7 @@ pub struct ContextMenu {
 pub enum Contextable {
     Debug,
     Demon,
-    Journal,
+    DeskItem(DeskItem),
 }
 
 #[derive(Component)]
@@ -139,8 +141,8 @@ pub fn initialize_menu(
 ) {
     // Setup new menus.
     for event in readies.read() {
-        println!("Initializing menu");
         if let Ok((mut context, mut spine)) = query.get_mut(event.entity) {
+            println!("Initializing menu");
             context.ready = true;
             // Spin once, for flavor
             spine

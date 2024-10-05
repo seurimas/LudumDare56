@@ -1,8 +1,10 @@
 pub mod context;
 pub mod interaction;
+pub mod tools;
 
 use context::*;
-use interaction::{add_backdrop_interactable, interactable_system, track_mouse, InteractEvent};
+use interaction::*;
+use tools::*;
 
 use crate::prelude::*;
 
@@ -14,7 +16,7 @@ impl Plugin for DeskPlugin {
             .init_resource::<InteractState>()
             .add_systems(
                 OnEnter(Playing),
-                (add_backdrop_interactable, spawn_debug_item),
+                (add_backdrop_interactable, spawn_debug_item, spawn_desk),
             )
             .add_systems(
                 Update,
@@ -22,6 +24,7 @@ impl Plugin for DeskPlugin {
                     spawn_context_menu,
                     initialize_menu,
                     interact_menu,
+                    initialize_desk,
                     debug_handle_events,
                 )
                     .run_if(in_state(Playing)),
