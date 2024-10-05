@@ -1,0 +1,22 @@
+Sorted list of priorities:
+* Context menus (3 items)
+* Chat/info box
+* Desk layout
+
+Demon jobs:
+* Alchemy - create potions
+* Tarot deck - create new cards
+* Journal - create knowledge (or doodles, from dumb demons)
+* Wands - craft a new wand
+* Garden - grow new ingredients
+
+Tools and actions (3 main, 1 secondary):
+* Alchemy - drink, grab, bottle (pour out)
+* Summon Tarot - left, summon, right (send to mirror)
+* Journal - left, conjure tool (or destroy doodle), right (N/A)
+* Mirror - create card from clipboard 
+* Wands - 
+
+Stats:
+* Mana - used for summoning and casting spells with wands
+* 
