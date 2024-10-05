@@ -4,12 +4,20 @@ pub const LEFT_TRACK: usize = 0;
 pub const RIGHT_TRACK: usize = 1;
 pub const MIDDLE_TRACK: usize = 2;
 
-#[derive(Component, Default)]
+#[derive(Component)]
 pub struct ContextMenu {
+    pub referenced: Contextable,
     pub ready: bool,
     pub left_hovering: bool,
     pub right_hovering: bool,
     pub middle_hovering: bool,
+}
+
+#[derive(Clone, Debug)]
+pub enum Contextable {
+    Debug,
+    Demon,
+    Journal,
 }
 
 #[derive(Component)]
@@ -17,16 +25,29 @@ pub struct ContextItem {
     pub name: String,
 }
 
-pub fn spawn_debug_menu(
+pub fn spawn_debug_item(mut commands: Commands, game_assets: Res<GameAssets>) {
+    let transform = Transform::from_translation(Vec3::new(0.0, 0.0, 0.0));
+    commands.spawn((
+        SpriteBundle {
+            texture: game_assets.debug_texture.clone(),
+            transform,
+            ..Default::default()
+        },
+        Interactable::Contextable(Contextable::Debug),
+    ));
+}
+
+pub fn spawn_context_menu(
     mut interact_events: EventReader<InteractEvent>,
     mut commands: Commands,
     existing: Query<Entity, With<ContextMenu>>,
     game_assets: Res<GameAssets>,
     skeletons: Res<Skeletons>,
 ) {
-    let clicked_backdrop = interact_events
-        .read()
-        .find(|event| event.interact_type == InteractType::Press);
+    let clicked_backdrop = interact_events.read().find(|event| {
+        event.interact_type == InteractType::Press
+            && matches!(event.interactable, Interactable::Contextable(_))
+    });
     if let Some(clicked_backdrop) = clicked_backdrop {
         for entity in existing.iter() {
             commands.entity(entity).despawn_recursive();
@@ -40,7 +61,19 @@ pub fn spawn_debug_menu(
                 skeleton: skeletons.context.clone(),
                 ..Default::default()
             },
-            ContextMenu::default(),
+            ContextMenu {
+                referenced: if let Interactable::Contextable(contextable) =
+                    clicked_backdrop.interactable.clone()
+                {
+                    contextable
+                } else {
+                    Contextable::Debug
+                },
+                ready: false,
+                left_hovering: false,
+                right_hovering: false,
+                middle_hovering: false,
+            },
         ));
     }
 }
@@ -74,6 +107,7 @@ pub fn interact_menu(
                                 .animation_state
                                 .set_animation_by_name(MIDDLE_TRACK, "middle_hover", true)
                                 .expect("Failed to set animation");
+                        } else if item.name == "back" {
                         }
                     }
                     InteractType::Unhover => {

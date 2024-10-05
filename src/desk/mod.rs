@@ -12,11 +12,14 @@ impl Plugin for DeskPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<InteractEvent>()
             .init_resource::<InteractState>()
-            .add_systems(OnEnter(Playing), add_backdrop_interactable)
+            .add_systems(
+                OnEnter(Playing),
+                (add_backdrop_interactable, spawn_debug_item),
+            )
             .add_systems(
                 Update,
                 (
-                    spawn_debug_menu,
+                    spawn_context_menu,
                     initialize_menu,
                     interact_menu,
                     debug_handle_events,

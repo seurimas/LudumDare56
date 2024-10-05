@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+use super::Contextable;
+
 #[derive(Resource, Default)]
 pub struct InteractState {
     pub mouse_location: Vec2,
@@ -7,8 +9,9 @@ pub struct InteractState {
     pub grabbed: Option<Entity>,
 }
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Debug)]
 pub enum Interactable {
+    Contextable(Contextable),
     ContextItem,
     Backdrop,
 }
@@ -18,6 +21,7 @@ pub struct InteractEvent {
     pub entity: Entity,
     pub mouse_world_location: Vec2,
     pub interact_type: InteractType,
+    pub interactable: Interactable,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -32,6 +36,7 @@ pub enum InteractType {
 impl Interactable {
     pub fn priority(&self) -> i32 {
         match self {
+            Interactable::Contextable(_) => 50,
             Interactable::ContextItem => 0,
             Interactable::Backdrop => -100,
         }
@@ -39,6 +44,7 @@ impl Interactable {
 
     pub fn in_range(&self, offset: Vec2) -> bool {
         match self {
+            Interactable::Contextable(_) => offset.length() < 50.0,
             Interactable::ContextItem => offset.length() < 50.0,
             Interactable::Backdrop => true,
         }
@@ -78,8 +84,6 @@ pub fn interactable_system(
     for (entity, transform, interactable) in query.iter() {
         let offset = transform.translation().truncate() - mouse_world_location;
         if interactable.in_range(offset) {
-            println!("{:?}", offset);
-
             if let Some((_, best_interactable)) = best {
                 if interactable.priority() > best_interactable.priority() {
                     best = Some((entity, interactable));
@@ -89,7 +93,7 @@ pub fn interactable_system(
             }
         }
     }
-    if let Some((entity, _)) = best {
+    if let Some((entity, interactable)) = best {
         let old_hover = interact_state.hovered;
         let pressed = mouse_button_input.just_pressed(MouseButton::Left);
         let released = mouse_button_input.just_released(MouseButton::Left);
@@ -98,6 +102,7 @@ pub fn interactable_system(
                 entity,
                 mouse_world_location,
                 interact_type: InteractType::Press,
+                interactable: interactable.clone(),
             });
             interact_state.hovered = Some(entity);
             // interact_state.grabbed = Some(entity); // Set elsewhere, when appropriate.
@@ -106,6 +111,7 @@ pub fn interactable_system(
                 entity,
                 mouse_world_location,
                 interact_type: InteractType::DropOver,
+                interactable: interactable.clone(),
             });
             interact_state.hovered = None;
             interact_state.grabbed = None;
@@ -120,18 +126,21 @@ pub fn interactable_system(
                     entity: old_hover,
                     mouse_world_location,
                     interact_type: InteractType::Unhover,
+                    interactable: interactable.clone(),
                 });
                 if interact_state.grabbed.is_some() {
                     interact_events.send(InteractEvent {
                         entity,
                         mouse_world_location,
                         interact_type: InteractType::HoverWithGrabbed,
+                        interactable: interactable.clone(),
                     });
                 } else {
                     interact_events.send(InteractEvent {
                         entity,
                         mouse_world_location,
                         interact_type: InteractType::Hover,
+                        interactable: interactable.clone(),
                     });
                 }
             }
@@ -140,6 +149,7 @@ pub fn interactable_system(
                 entity,
                 mouse_world_location,
                 interact_type: InteractType::Hover,
+                interactable: interactable.clone(),
             });
         }
     }

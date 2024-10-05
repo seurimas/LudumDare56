@@ -10,10 +10,10 @@ Demon jobs:
 * Wands - craft a new wand
 * Garden - grow new ingredients
 
-Tools and actions (3 main, 1 secondary):
-* Alchemy - drink, grab, bottle (pour out)
-* Summon Tarot - left, summon, right (send to mirror)
-* Journal - left, conjure tool (or destroy doodle), right (N/A)
+Tools and actions (3 main):
+* Alchemy - drink, grab, bottle
+* Summon Tarot - left, summon, right
+* Journal - left, conjure tool (or destroy doodle), right
 * Mirror - create card from clipboard 
 * Wands - 
 

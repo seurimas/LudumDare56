@@ -21,6 +21,8 @@ impl Plugin for GameAssetsPlugin {
 
 #[derive(AssetCollection, Resource)]
 pub struct GameAssets {
+    #[asset(path = "Debug.png")]
+    pub debug_texture: Handle<Image>,
     #[asset(path = "spines/context.atlas")]
     pub context_atlas: Handle<Atlas>,
     #[asset(path = "spines/context.json")]
