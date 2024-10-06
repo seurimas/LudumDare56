@@ -130,11 +130,12 @@ pub fn manage_chat_boxes(
                             chat_box.text.clone(),
                             TextStyle {
                                 color: Color::BLACK,
+                                font_size: 12.,
                                 ..Default::default()
                             },
                         ),
                         text_2d_bounds: Text2dBounds {
-                            size: Vec2::new(200.0, 100.0),
+                            size: Vec2::new(175.0, 90.0),
                         },
                         transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
                         visibility: Visibility::Hidden,

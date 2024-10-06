@@ -87,8 +87,14 @@ pub fn tool_time(dna: &DemonDna, nonce: u32, min: f32, max: f32) -> f32 {
 // const BODY_SKINS: [&'static str; 1] = ["debug/torso"];
 // const HAND_SKINS: [&'static str; 1] = ["debug/hand"];
 // const FOOT_SKINS: [&'static str; 1] = ["debug/foot"];
-const HEAD_SKINS: [&'static str; 2] = ["heads/bug", "heads/goat"];
-const BODY_SKINS: [&'static str; 2] = ["torsos/eye_see", "torsos/pumpkin"];
+const HEAD_SKINS: [&'static str; 4] = ["heads/bug", "heads/goat", "heads/mimic", "heads/big_eyes"];
+const BODY_SKINS: [&'static str; 5] = [
+    "torsos/eye_see",
+    "torsos/pumpkin",
+    "torsos/bear",
+    "torsos/spiky",
+    "torsos/empty",
+];
 const HAND_SKINS: [&'static str; 2] = ["hands/claws", "hands/bear"];
 const FOOT_SKINS: [&'static str; 2] = ["feet/claws", "feet/bear"];
 
