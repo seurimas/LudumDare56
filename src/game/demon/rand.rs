@@ -64,7 +64,8 @@ pub fn roll_characteristic(dna: &DemonDna, idx: usize, nonce: u32, chance_basis:
     characteristic < chance
 }
 
-const TOOL_PREFERENCE_IDX: usize = 867;
+const TOOL_PREFERENCE_IDX: usize = 0;
+const TOOL_TIME_IDX: usize = 1;
 pub fn pick_random_tool(dna: &DemonDna, nonce: u32) -> DeskItem {
     let characteristic = nonced_characteristic(&dna.0, TOOL_PREFERENCE_IDX, nonce);
     match characteristic % 2 {
@@ -72,6 +73,12 @@ pub fn pick_random_tool(dna: &DemonDna, nonce: u32) -> DeskItem {
         1 => DeskItem::Journal,
         _ => unreachable!(),
     }
+}
+
+pub fn tool_time(dna: &DemonDna, nonce: u32, min: f32, max: f32) -> f32 {
+    let characteristic = nonced_characteristic(&dna.0, TOOL_TIME_IDX, nonce);
+    let characteristic = characteristic as f32 / u32::MAX as f32;
+    min + (max - min) * characteristic
 }
 
 // const HEAD_SKINS: [&'static str; 1] = ["debug/head"];

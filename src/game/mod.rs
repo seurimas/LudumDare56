@@ -45,6 +45,8 @@ impl Plugin for DeskPlugin {
                     activate_demons,
                     bother_demons,
                     untask_demons,
+                    trigger_alembic,
+                    trigger_journal,
                 )
                     .run_if(in_state(Playing)),
             )

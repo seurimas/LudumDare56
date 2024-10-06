@@ -1,21 +1,26 @@
-Selector([
+Sequence([
+    Succeeder(
+        Selector([
+            Sequence([
+                User(CheckDistraction(Wander)),
+                User(Distraction(Wander)),
+            ]),
+            Sequence([
+                User(CheckDistraction(Sleep)),
+                User(Distraction(Sleep)),
+            ])
+        ])
+    ),
+            User(NotDistracted),
     Selector([
         Sequence([
-            User(CheckDistraction(Wander)),
-            User(Distraction(Wander)),
+            User(DoILikeNearestTool),
+            User(MoveToNearestTool),
+            User(UseTool),
         ]),
         Sequence([
-            User(CheckDistraction(Sleep)),
-            User(Distraction(Sleep)),
-        ])
-    ]),
-    Sequence([
-        User(DoILikeNearestTool),
-        User(MoveToNearestTool),
-        User(UseTool),
-    ]),
-    Sequence([
-        User(MoveToRandomTool),
-        User(UseTool),
-    ]),
+            User(MoveToRandomTool),
+            User(UseTool),
+        ]),
+    ])
 ])

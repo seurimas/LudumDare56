@@ -1,6 +1,8 @@
 Sorted list of priorities:
 * Demon use tools
-* Tools create items
+* Tools create lore
+* Demons unsummon after completing a task
+* You get a demon's card after they complete a task
 * Fix glitchy chat box (unhover on enter)
 
 Demon jobs:

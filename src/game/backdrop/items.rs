@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    game::{spawn_demon, AttachedChatBox, DemonBrainDef},
+    game::{spawn_demon, AttachedChatBox, DemonBrainDef, DemonDna},
     prelude::*,
 };
 
@@ -21,16 +21,25 @@ pub enum DeskItem {
     Alembic,
     Summoning,
     Journal,
+    Potion,
     Candle(usize),
 }
 
 impl DeskItem {
     pub fn demon_can_use(&self) -> bool {
         match self {
-            DeskItem::Alembic | DeskItem::Journal => true,
-            DeskItem::Summoning | DeskItem::Candle(_) => false,
+            DeskItem::Alembic | DeskItem::Journal | DeskItem::Summoning => true,
+            DeskItem::Potion | DeskItem::Candle(_) => false,
         }
     }
+}
+
+#[derive(Component, Default, Clone, Debug)]
+pub struct DeskItemState {
+    pub user: Option<Entity>,
+    pub progress: f32,
+    pub just_completed: Option<DemonDna>,
+    pub completed: Vec<DemonDna>,
 }
 
 // Summoning
@@ -49,35 +58,30 @@ pub fn handle_summoning_context(
     for event in context_events.read() {
         match event {
             ContextAction::PressLeft(Contextable::DeskItem(DeskItem::Summoning)) => {
-                desk.animation_state
-                    .set_animation_by_name(CANDLE_0_TRACK, "light/light0", false)
-                    .expect("Failed to set animation");
-                desk.animation_state
-                    .add_empty_animation(CANDLE_0_TRACK, 0.0, 0.0);
-                desk.animation_state
-                    .set_animation_by_name(CANDLE_1_TRACK, "light/light1", false)
-                    .expect("Failed to set animation");
-                desk.animation_state
-                    .add_empty_animation(CANDLE_1_TRACK, 0.0, 0.0);
+                desk.skeleton
+                    .find_bone_mut("candle0")
+                    .unwrap()
+                    .set_scale(Vec2::new(1., 1.));
+                desk.skeleton
+                    .find_bone_mut("candle1")
+                    .unwrap()
+                    .set_scale(Vec2::new(1., 1.));
             }
             ContextAction::PressRight(Contextable::DeskItem(DeskItem::Summoning)) => {
-                desk.animation_state
-                    .set_animation_by_name(CANDLE_2_TRACK, "light/light2", false)
-                    .expect("Failed to set animation");
-                desk.animation_state
-                    .add_empty_animation(CANDLE_2_TRACK, 0.0, 0.0);
-                desk.animation_state
-                    .set_animation_by_name(CANDLE_3_TRACK, "light/light3", false)
-                    .expect("Failed to set animation");
-                desk.animation_state
-                    .add_empty_animation(CANDLE_3_TRACK, 0.0, 0.0);
+                desk.skeleton
+                    .find_bone_mut("candle2")
+                    .unwrap()
+                    .set_scale(Vec2::new(1., 1.));
+                desk.skeleton
+                    .find_bone_mut("candle3")
+                    .unwrap()
+                    .set_scale(Vec2::new(1., 1.));
             }
             ContextAction::PressMiddle(Contextable::DeskItem(DeskItem::Summoning)) => {
-                desk.animation_state
-                    .set_animation_by_name(CANDLE_4_TRACK, "light/light4", false)
-                    .expect("Failed to set animation");
-                desk.animation_state
-                    .add_empty_animation(CANDLE_4_TRACK, 0.0, 0.0);
+                desk.skeleton
+                    .find_bone_mut("candle4")
+                    .unwrap()
+                    .set_scale(Vec2::new(1., 1.));
             }
             ContextAction::HoverLeft(chat_attach, Contextable::DeskItem(DeskItem::Summoning))
             | ContextAction::HoverMiddle(chat_attach, Contextable::DeskItem(DeskItem::Summoning))
@@ -117,18 +121,15 @@ pub fn trigger_summoning(
         }
         let mut desk = desk.unwrap();
         let mut lit_count = 0;
-        for (item, bone, _) in items.iter() {
-            if let DeskItem::Candle(idx) = item {
-                if desk.skeleton.find_bone(bone.name.as_str()).is_none() {
-                    println!("Failed to find bone: {}", bone.name);
-                    continue;
+        ["candle0", "candle1", "candle2", "candle3", "candle4"]
+            .iter()
+            .for_each(|bone_name| {
+                if let Some(bone) = desk.skeleton.find_bone(bone_name) {
+                    if bone.scale_x() == 1.0 {
+                        lit_count += 1;
+                    }
                 }
-                let bone = desk.skeleton.find_bone(bone.name.as_str()).unwrap();
-                if bone.scale().x == 1.0 {
-                    lit_count += 1;
-                }
-            }
-        }
+            });
         if lit_count == 5 {
             if desk
                 .animation_state
@@ -175,27 +176,79 @@ pub fn trigger_summoning(
                         desk.skeleton
                             .find_bone_mut("candle0")
                             .unwrap()
-                            .set_scale(Vec2::new(0.0, 0.0));
+                            .set_scale(Vec2::new(0., 0.));
                         desk.skeleton
                             .find_bone_mut("candle1")
                             .unwrap()
-                            .set_scale(Vec2::new(0.0, 0.0));
+                            .set_scale(Vec2::new(0., 0.));
                         desk.skeleton
                             .find_bone_mut("candle2")
                             .unwrap()
-                            .set_scale(Vec2::new(0.0, 0.0));
+                            .set_scale(Vec2::new(0., 0.));
                         desk.skeleton
                             .find_bone_mut("candle3")
                             .unwrap()
-                            .set_scale(Vec2::new(0.0, 0.0));
+                            .set_scale(Vec2::new(0., 0.));
                         desk.skeleton
                             .find_bone_mut("candle4")
                             .unwrap()
-                            .set_scale(Vec2::new(0.0, 0.0));
+                            .set_scale(Vec2::new(0., 0.));
                     } else {
                         panic!("Failed to find summoning location");
                     }
                 }
+            }
+        }
+    }
+}
+
+// Alembic
+pub fn trigger_alembic(
+    mut desk: Query<&mut Spine, With<Desk>>,
+    mut items: Query<(&DeskItem, &mut DeskItemState)>,
+) {
+    let desk = desk.iter_mut().next();
+    if desk.is_none() {
+        return;
+    }
+    let mut desk = desk.unwrap();
+    if let Some((alembic, mut state)) = items
+        .iter_mut()
+        .find(|(item, _)| matches!(item, DeskItem::Alembic))
+    {
+        {
+            if let Some(dna) = state.just_completed {
+                println!("Alembic just completed: {:?}", dna);
+                state.completed.push(dna);
+                state.just_completed = None;
+                state.progress = 0.0;
+                state.user = None;
+            }
+        }
+    }
+}
+
+// Alembic
+pub fn trigger_journal(
+    mut desk: Query<&mut Spine, With<Desk>>,
+    mut items: Query<(&DeskItem, &mut DeskItemState)>,
+) {
+    let desk = desk.iter_mut().next();
+    if desk.is_none() {
+        return;
+    }
+    let mut desk = desk.unwrap();
+    if let Some((alembic, mut state)) = items
+        .iter_mut()
+        .find(|(item, _)| matches!(item, DeskItem::Journal))
+    {
+        {
+            if let Some(dna) = state.just_completed {
+                println!("Journal just completed: {:?}", dna);
+                state.completed.push(dna);
+                state.just_completed = None;
+                state.progress = 0.0;
+                state.user = None;
             }
         }
     }

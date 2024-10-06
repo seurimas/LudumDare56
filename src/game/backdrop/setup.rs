@@ -1,4 +1,7 @@
-use crate::{game::Contextable, prelude::*};
+use crate::{
+    game::{Contextable, DeskItemState},
+    prelude::*,
+};
 
 pub const BASE_DESK_WIDTH: f32 = 512.0;
 pub const BASE_DESK_HEIGHT: f32 = 512.0;
@@ -68,19 +71,28 @@ pub fn initialize_desk(
     for event in readies.read() {
         if let Ok((mut desk, mut spine)) = query.get_mut(event.entity) {
             println!("Initializing backdrop");
+
             commands
                 .entity(event.entity)
                 .insert((get_polyline_from_boundaries(&spine), RigidBody::Fixed));
-            for bone in ["candle0", "candle1", "candle2", "candle3", "candle4"].iter() {
-                let mut bone = spine.skeleton.find_bone_mut(bone).unwrap();
-                bone.set_scale(Vec2::new(0.0, 0.0));
+
+            for bone_name in [
+                "candle0", "candle1", "candle2", "candle3", "candle4", "water", "line0", "line1",
+                "line2", "line3", "line4",
+            ]
+            .iter()
+            {
+                let mut bone = spine.skeleton.find_bone_mut(*bone_name).unwrap();
+                bone.set_scale(Vec2::new(0., 0.));
             }
+
             for (bone_name, bone) in event.bones.iter() {
                 println!("Adding context item: {}", bone_name);
                 let (item, bounding_slot) = match bone_name.as_str() {
                     "alembic" => (DeskItem::Alembic, Some("alembic_interact")),
-                    "summoning" => (DeskItem::Summoning, None),
+                    "summoning" => (DeskItem::Summoning, Some("summoning_interact")),
                     "journal" => (DeskItem::Journal, Some("journal_interact")),
+                    "potion" => (DeskItem::Potion, None),
                     "candle0" => (DeskItem::Candle(0), None),
                     "candle1" => (DeskItem::Candle(1), None),
                     "candle2" => (DeskItem::Candle(2), None),
@@ -92,7 +104,9 @@ pub fn initialize_desk(
                     DeskItem::Candle(idx) => Interactable::Candle(idx),
                     item => Interactable::Contextable(Contextable::DeskItem(item)),
                 };
-                commands.entity(*bone).insert((item, interactable));
+                commands
+                    .entity(*bone)
+                    .insert((item, interactable, DeskItemState::default()));
                 if let Some(bounding_slot) = bounding_slot {
                     let collider = get_polygon_for_bounding_box(&spine, bounding_slot);
                     commands.entity(*bone).insert((

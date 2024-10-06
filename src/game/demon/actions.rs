@@ -1,16 +1,26 @@
 use behavior_bark::unpowered::UnpoweredFunctionState;
 
-use crate::prelude::*;
+use crate::{game::DeskItemState, prelude::*};
 
 use super::{DemonBrain, DemonModel, Distraction};
 
 pub const DEMON_MAIN_TRACK: usize = 0;
 
 pub fn activate_demons(
-    mut query: Query<(Entity, &Transform, &mut Demon, &mut Spine), Without<DeskItem>>,
-    desk_items: Query<(&Transform, &DeskItem), Without<Demon>>,
+    time: Res<Time>,
+    mut desk: Query<&mut Spine, With<Desk>>,
+    mut query: Query<
+        (Entity, &Transform, &mut Demon, &mut Spine),
+        (Without<DeskItem>, Without<Desk>),
+    >,
+    mut desk_items: Query<(&Transform, &DeskItem, &mut DeskItemState), Without<Demon>>,
     mut velocities: Query<&mut Velocity>,
 ) {
+    let desk = desk.iter_mut().next();
+    if desk.is_none() {
+        return;
+    }
+    let desk = desk.unwrap();
     for (entity, transform, mut demon, mut spine) in query.iter_mut() {
         match &demon.action {
             DemonController::MoveTo(target) => {
@@ -31,8 +41,8 @@ pub fn activate_demons(
                         .animation_state
                         .add_empty_animation(DEMON_MAIN_TRACK, 0., 0.);
                 }
-                let desk_item = desk_items.iter().find(|(_, item)| *item == target);
-                if let Some((target_transform, _)) = desk_item {
+                let desk_item = desk_items.iter().find(|(_, item, _)| *item == target);
+                if let Some((target_transform, _, _)) = desk_item {
                     let direction = target_transform.translation - transform.translation;
                     let direction = direction.truncate();
                     let mut velocity = velocities.get_mut(entity).unwrap();
@@ -40,6 +50,26 @@ pub fn activate_demons(
                 }
             }
             DemonController::UseTool => {
+                if let Some((_, item, mut state)) = desk_items
+                    .iter_mut()
+                    .find(|(_, item, _)| Some(**item) == demon.in_area_for_tool)
+                {
+                    if state.user == Some(entity) {
+                        // Already using tool
+                        state.progress += time.delta_seconds();
+                        continue;
+                    } else if state.user.is_some() {
+                        // Someone else is using the tool
+                        demon.action = DemonController::Distracted(
+                            Distraction::Berate,
+                            Box::new(demon.action.clone()),
+                        );
+                        continue;
+                    } else {
+                        state.user = Some(entity);
+                        state.progress = 0.0;
+                    }
+                }
                 let mut velocity = velocities.get_mut(entity).unwrap();
                 velocity.linvel = Vec2::ZERO;
             }
@@ -89,7 +119,7 @@ pub fn activate_demons(
                             velocity.linvel = direction.normalize() * 50.0;
                         }
                     }
-                    Distraction::Complain => {
+                    Distraction::Complain | Distraction::Berate => {
                         if spine
                             .animation_state
                             .get_current(DEMON_MAIN_TRACK)
@@ -128,7 +158,14 @@ pub fn activate_demons(
                     }
                 }
             }
-            _ => {}
+            DemonController::FinishJob => {
+                for (_, _, mut state) in desk_items.iter_mut() {
+                    if state.user == Some(entity) {
+                        state.just_completed = Some(demon.dna.clone());
+                    }
+                }
+            }
+            DemonController::Idle => {}
         }
     }
 }
@@ -139,15 +176,30 @@ pub fn mark_demons_in_area(
     desk_items: Query<&DeskItem>,
 ) {
     for event in collision_events.read() {
+        println!("Collision event: {:?}", event);
         if let CollisionEvent::Started(a, b, _) = event {
             if let Ok(mut demon) = demons.get_mut(*a) {
                 if let Ok(desk_item) = desk_items.get(*b) {
+                    println!("Demon entered area for tool");
+                    demon.in_area_for_tool = Some(*desk_item);
+                }
+            } else if let Ok(mut demon) = demons.get_mut(*b) {
+                if let Ok(desk_item) = desk_items.get(*a) {
+                    println!("Demon entered area for tool");
                     demon.in_area_for_tool = Some(*desk_item);
                 }
             }
         } else if let CollisionEvent::Stopped(a, b, _) = event {
             if let Ok(mut demon) = demons.get_mut(*a) {
                 if let Ok(desk_item) = desk_items.get(*b) {
+                    println!("Demon left area for tool");
+                    if demon.in_area_for_tool == Some(*desk_item) {
+                        demon.in_area_for_tool = None;
+                    }
+                }
+            } else if let Ok(mut demon) = demons.get_mut(*b) {
+                if let Ok(desk_item) = desk_items.get(*a) {
+                    println!("Demon left area for tool");
                     if demon.in_area_for_tool == Some(*desk_item) {
                         demon.in_area_for_tool = None;
                     }
@@ -182,14 +234,24 @@ pub fn mark_closest_item(
     }
 }
 
-pub fn control_demons(mut query: Query<(&mut Demon, &mut DemonBrain)>) {
-    for (mut demon, mut brains) in query.iter_mut() {
+pub fn control_demons(
+    mut query: Query<(Entity, &mut Demon, &mut DemonBrain)>,
+    tools: Query<(&DeskItem, &DeskItemState)>,
+) {
+    for (entity, mut demon, mut brains) in query.iter_mut() {
+        let using_tool = tools.iter().find_map(|(item, state)| {
+            if state.user == Some(entity) {
+                Some(state.progress)
+            } else {
+                None
+            }
+        });
         let model = DemonModel {
             dna: demon.dna,
             nonce: demon.nonce,
             in_range_of_tool: demon.in_area_for_tool.is_some(),
             nearest_tool: demon.nearest_tool,
-            using_tool: matches!(demon.action, DemonController::UseTool),
+            using_tool,
         };
         if matches!(demon.action, DemonController::Distracted(_, _)) {
             continue;
