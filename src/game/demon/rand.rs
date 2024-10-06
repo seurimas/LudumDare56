@@ -103,9 +103,9 @@ pub fn get_skins(dna: &DemonDna) -> [&'static str; 4] {
     [head_skin, body_skin, hand_skin, foot_skin]
 }
 
-const POTION_TYPE_IDX: usize = 13; // These are the same, so they match up.
-const POTION_EMOTION_IDX: usize = 13;
-const POTION_AFTERTASTE_IDX: usize = 35;
+const POTION_TYPE_IDX: usize = 55; // These are the same, so they match up.
+const POTION_EMOTION_IDX: usize = 55;
+const POTION_AFTERTASTE_IDX: usize = 56;
 const POTION_COLOR_IDX: usize = 57;
 
 const POTION_TYPE: [&'static str; 8] = [
@@ -126,7 +126,7 @@ const POTION_EMOTIONS: [&'static str; 8] = [
     "You feel overwhelmed with excitement",
     "Gray gloom fills your mind",
     "Dizziness overtakes you",
-    "You desperately crave some company",
+    "You suddenly crave some company",
 ];
 const POTION_AFTERTASTES: [&'static str; 4] = [
     ", and the taste of copper fills your mouth.",

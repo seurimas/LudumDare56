@@ -15,4 +15,5 @@ pub fn get_current_animation(spine: &Spine, animation_track: usize) -> Option<St
         .animation_state
         .get_current(animation_track)
         .map(|current| current.animation().name().to_string())
+        .filter(|name| !name.is_empty() && !name.contains("empty"))
 }

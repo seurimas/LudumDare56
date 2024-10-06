@@ -1,6 +1,6 @@
 Sorted list of priorities:
-* Demon use tools
-* Tools create lore
+* Zoom in/out
+* Share demons
 
 Demon jobs:
 * Alchemy - create potions

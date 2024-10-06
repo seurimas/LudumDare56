@@ -1,4 +1,5 @@
 pub mod backdrop;
+pub mod camera;
 pub mod chat;
 pub mod demon;
 pub mod input;
@@ -6,6 +7,7 @@ pub mod input;
 use crate::prelude::*;
 
 use backdrop::*;
+use camera::*;
 use chat::*;
 use demon::*;
 use input::*;
@@ -17,10 +19,13 @@ impl Plugin for DeskPlugin {
         app.add_event::<InteractEvent>()
             .add_event::<ContextAction>()
             .init_resource::<InteractState>()
+            .add_systems(OnEnter(Playing), spawn_camera)
+            .add_systems(OnExit(Playing), despawn_camera)
             .add_systems(
                 OnEnter(Playing),
                 (add_backdrop_interactable, spawn_debug_item, spawn_desk),
             )
+            .add_systems(Update, zoom_and_move_camera.run_if(in_state(Playing)))
             .add_systems(
                 Update,
                 (

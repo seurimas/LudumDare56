@@ -253,6 +253,14 @@ pub fn trigger_alembic(
         .iter_mut()
         .find(|(item, _)| matches!(item, DeskItem::Alembic))
     {
+        if state.user.is_some() {
+            if get_current_animation(&desk, JOURNAL_TRACK).is_none() {
+                desk.animation_state
+                    .set_animation_by_name(ALEMBIC_TRACK, "demon_alembic", true);
+            }
+        } else {
+            desk.animation_state.set_empty_animation(ALEMBIC_TRACK, 0.);
+        }
         if let Some(dna) = state.just_completed {
             state.just_completed = None;
             state.progress = 0.0;
@@ -333,13 +341,19 @@ pub fn trigger_journal(
         .iter_mut()
         .find(|(item, _)| matches!(item, DeskItem::Journal))
     {
-        {
-            if let Some(dna) = state.just_completed {
-                state.completed.push(dna);
-                state.just_completed = None;
-                state.progress = 0.0;
-                state.user = None;
+        if state.user.is_some() {
+            if get_current_animation(&desk, JOURNAL_TRACK).is_none() {
+                desk.animation_state
+                    .set_animation_by_name(JOURNAL_TRACK, "demon_journal", true);
             }
+        } else {
+            desk.animation_state.set_empty_animation(JOURNAL_TRACK, 0.);
+        }
+        if let Some(dna) = state.just_completed {
+            state.completed.push(dna);
+            state.just_completed = None;
+            state.progress = 0.0;
+            state.user = None;
         }
     }
 }
