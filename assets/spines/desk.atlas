@@ -1,54 +1,61 @@
 desk.png
-size:673,379
+size:646,473
 filter:Linear,Linear
 pma:true
 Alembic
-bounds:516,232,136,145
+bounds:508,326,136,145
 offsets:12,22,175,180
-Backdrop
-bounds:2,3,512,374
-offsets:0,0,512,512
 CandleLight
-bounds:545,5,6,5
+bounds:71,7,6,5
 offsets:0,0,6,25
 rotate:90
+Doorway
+bounds:508,104,64,97
+offsets:242,378,512,512
 Journal
-bounds:516,109,121,99
+bounds:508,203,121,99
 offsets:19,31,165,179
 rotate:90
 Journal Line 1
-bounds:629,8,35,15
+bounds:609,289,35,15
 offsets:83,232,512,512
+rotate:90
 Journal Line 2
-bounds:656,89,32,15
+bounds:609,255,32,15
 offsets:88,223,512,512
 rotate:90
 Journal Line 3
-bounds:597,5,17,18
+bounds:609,235,17,18
 offsets:111,215,512,512
 Journal Line 5
-bounds:616,6,17,11
+bounds:2,2,17,11
 offsets:94,216,512,512
-rotate:90
 Journal Line 6
-bounds:516,2,27,9
+bounds:21,4,27,9
 offsets:99,204,512,512
+LoneCandle
+bounds:50,5,8,19
+offsets:0,0,9,20
+rotate:90
+NewDesk
+bounds:2,15,504,456
+offsets:8,0,512,512
 Potion
-bounds:642,123,41,23
+bounds:614,10,41,23
 offsets:4,5,51,34
 rotate:90
 Potion Layer
-bounds:597,25,82,57
+bounds:574,119,82,57
 offsets:3,5,88,66
 rotate:90
 PotionBottle
-bounds:617,166,47,64
+bounds:589,53,47,64
 offsets:7,9,60,79
 Summoning
-bounds:516,13,94,79
+bounds:508,8,94,79
 offsets:32,26,141,136
 rotate:90
 Swirl Layer
-bounds:617,116,48,23
+bounds:589,3,48,23
 offsets:7,8,68,46
 rotate:90

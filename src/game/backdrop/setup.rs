@@ -91,6 +91,7 @@ pub fn initialize_desk(
                 let (item, bounding_slot) = match bone_name.as_str() {
                     "alembic" => (DeskItem::Alembic, Some("alembic_interact")),
                     "summoning" => (DeskItem::Summoning, Some("summoning_interact")),
+                    "doorway" => (DeskItem::Doorway, Some("doorway_interact")),
                     "journal" => (DeskItem::Journal, Some("journal_interact")),
                     "potion" => (DeskItem::Potion, None),
                     "candle0" => (DeskItem::Candle(0), None),
@@ -98,12 +99,16 @@ pub fn initialize_desk(
                     "candle2" => (DeskItem::Candle(2), None),
                     "candle3" => (DeskItem::Candle(3), None),
                     "candle4" => (DeskItem::Candle(4), None),
+                    "doorway_candle0" => (DeskItem::DoorwayCandle(0), None),
+                    "doorway_candle1" => (DeskItem::DoorwayCandle(1), None),
                     _ => continue,
                 };
                 let interactable = match item {
                     DeskItem::Candle(idx) => Interactable::Candle(idx),
+                    DeskItem::DoorwayCandle(idx) => Interactable::DoorwayCandle(idx),
                     DeskItem::Potion => Interactable::Potion,
                     DeskItem::Journal => Interactable::Journal,
+                    DeskItem::Doorway => Interactable::Doorway,
                     // item => Interactable::Contextable(Contextable::DeskItem(item)),
                     _ => Interactable::Backdrop,
                 };

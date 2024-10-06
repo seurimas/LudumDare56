@@ -36,6 +36,7 @@ impl Plugin for DeskPlugin {
                     debug_handle_events,
                     handle_summoning_context,
                     trigger_summoning,
+                    trigger_doorway_summoning,
                     manage_chat_boxes,
                     light_candle,
                 )
@@ -51,6 +52,8 @@ impl Plugin for DeskPlugin {
                     activate_demons,
                     bother_demons,
                     untask_demons,
+                    trigger_doorway,
+                    read_card,
                     trigger_alembic,
                     drink_potion,
                     trigger_journal,

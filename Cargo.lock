@@ -14,6 +14,7 @@ dependencies = [
  "bevy_quickmenu",
  "bevy_rapier2d",
  "bevy_spine",
+ "imp_encode",
  "lazy_static",
  "native-dialog",
  "postcard",
@@ -2426,6 +2427,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4419f022e55cc63d5bbd6b44b71e1d226b9c9480a47824c706e9d54e5c40c5eb"
 dependencies = [
  "arrayvec",
+]
+
+[[package]]
+name = "imp_encode"
+version = "0.1.0"
+dependencies = [
+ "arboard",
+ "postcard",
+ "serde",
+ "unicode-segmentation",
 ]
 
 [[package]]

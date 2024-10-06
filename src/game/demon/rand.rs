@@ -67,10 +67,12 @@ pub fn roll_characteristic(dna: &DemonDna, idx: usize, nonce: u32, chance_basis:
 const TOOL_PREFERENCE_IDX: usize = 0;
 const TOOL_TIME_IDX: usize = 1;
 pub fn pick_random_tool(dna: &DemonDna, nonce: u32) -> DeskItem {
+    let max_tool = if nonce > 10 { 3 } else { 2 };
     let characteristic = nonced_characteristic(&dna.0, TOOL_PREFERENCE_IDX, nonce);
-    match characteristic % 2 {
+    match characteristic % max_tool {
         0 => DeskItem::Alembic,
         1 => DeskItem::Journal,
+        2 => DeskItem::Doorway,
         _ => unreachable!(),
     }
 }

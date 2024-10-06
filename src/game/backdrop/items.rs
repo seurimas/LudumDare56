@@ -1,9 +1,10 @@
+use imp_encode::{retrieve_cursed_bytes, CursedConfig};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     game::{
-        get_lore, get_potion, spawn_demon, spawn_main_chat_box, AttachedChatBox, DemonBrainDef,
-        DemonDna,
+        get_lore, get_name, get_potion, spawn_demon, spawn_main_chat_box, AttachedChatBox,
+        DemonBrainDef, DemonDna,
     },
     prelude::*,
 };
@@ -18,21 +19,24 @@ const CANDLE_4_TRACK: usize = 4;
 const JOURNAL_TRACK: usize = 5;
 const ALEMBIC_TRACK: usize = 6;
 const SUMMONING_TRACK: usize = 7;
+const DOORWAY_TRACK: usize = 8;
 
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DeskItem {
     Alembic,
     Summoning,
+    Doorway,
     Journal,
     Potion,
     Candle(usize),
+    DoorwayCandle(usize),
 }
 
 impl DeskItem {
     pub fn demon_can_use(&self) -> bool {
         match self {
-            DeskItem::Alembic | DeskItem::Journal | DeskItem::Summoning => true,
-            DeskItem::Potion | DeskItem::Candle(_) => false,
+            DeskItem::Alembic | DeskItem::Journal | DeskItem::Summoning | DeskItem::Doorway => true,
+            DeskItem::Potion | DeskItem::Candle(_) | DeskItem::DoorwayCandle(_) => false,
         }
     }
 }
@@ -130,6 +134,23 @@ pub fn light_candle(
                 2 => "candle2",
                 3 => "candle3",
                 4 => "candle4",
+                _ => continue,
+            };
+            let mut bone = desk.skeleton.find_bone_mut(bone_name).unwrap();
+            if bone.scale_x() == 0.0 {
+                bone.set_scale(Vec2::new(1., 1.));
+            } else {
+                bone.set_scale(Vec2::new(0., 0.));
+            }
+        } else if let InteractEvent {
+            interact_type: InteractType::Press,
+            interactable: Interactable::DoorwayCandle(idx),
+            ..
+        } = event
+        {
+            let bone_name = match idx {
+                0 => "doorway_candle_wick0",
+                1 => "doorway_candle_wick1",
                 _ => continue,
             };
             let mut bone = desk.skeleton.find_bone_mut(bone_name).unwrap();
@@ -239,6 +260,114 @@ pub fn trigger_summoning(
     }
 }
 
+pub fn trigger_doorway_summoning(
+    mut commands: Commands,
+    mut animation_events: EventReader<SpineEvent>,
+    mut desk: Query<&mut Spine, With<Desk>>,
+    items: Query<(&DeskItem, &SpineBone, &Transform)>,
+    skeletons: Res<Skeletons>,
+    game_assets: Res<GameAssets>,
+    brains: Res<Assets<DemonBrainDef>>,
+) {
+    {
+        let desk = desk.iter_mut().next();
+        if desk.is_none() {
+            return;
+        }
+        let mut desk = desk.unwrap();
+        let mut lit_count = 0;
+        ["doorway_candle_wick0", "doorway_candle_wick1"]
+            .iter()
+            .for_each(|bone_name| {
+                if let Some(bone) = desk.skeleton.find_bone(bone_name) {
+                    if bone.scale_x() == 1.0 {
+                        lit_count += 1;
+                    }
+                }
+            });
+        if lit_count == 2 {
+            if desk
+                .animation_state
+                .get_current(DOORWAY_TRACK)
+                .map(|current| {
+                    if current.animation().name().contains("empty") {
+                        false
+                    } else {
+                        true
+                    }
+                })
+                .unwrap_or(false)
+            {
+                // Already playing
+            } else {
+                desk.animation_state
+                    .set_animation_by_name(DOORWAY_TRACK, "doorway_summon", false)
+                    .expect("Failed to set animation");
+                desk.animation_state
+                    .add_empty_animation(DOORWAY_TRACK, 0.0, 0.0);
+            }
+        }
+    }
+    for event in animation_events.read() {
+        if let SpineEvent::Event { entity, name, .. } = event {
+            if let Ok(mut desk) = desk.get_mut(*entity) {
+                if *name == "SummonDoorway" {
+                    if let Some(location) = items.iter().find_map(|(item, _, transform)| {
+                        if let DeskItem::Doorway = item {
+                            Some(transform.translation)
+                        } else {
+                            None
+                        }
+                    }) {
+                        if let Some(dna) = retrieve_cursed_bytes().and_then(|vec| {
+                            if vec.len() == 16 {
+                                Some(DemonDna([
+                                    vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7],
+                                    vec[8], vec[9], vec[10], vec[11], vec[12], vec[13], vec[14],
+                                    vec[15],
+                                ]))
+                            } else {
+                                None
+                            }
+                        }) {
+                            let name = get_name(&dna);
+                            println!("Summoning {}", name);
+                            spawn_demon(
+                                &mut commands,
+                                &game_assets,
+                                skeletons.demon.clone(),
+                                location.truncate(),
+                                Some(dna),
+                                &brains,
+                            );
+                            desk.skeleton
+                                .find_bone_mut("doorway_candle_wick0")
+                                .unwrap()
+                                .set_scale(Vec2::new(0., 0.));
+                            desk.skeleton
+                                .find_bone_mut("doorway_candle_wick1")
+                                .unwrap()
+                                .set_scale(Vec2::new(0., 0.));
+                        } else {
+                            println!("No one to summon");
+                            desk.skeleton
+                                .find_bone_mut("doorway_candle_wick0")
+                                .unwrap()
+                                .set_scale(Vec2::new(0., 0.));
+                            desk.skeleton
+                                .find_bone_mut("doorway_candle_wick1")
+                                .unwrap()
+                                .set_scale(Vec2::new(0., 0.));
+                        }
+                    } else {
+                        panic!("Failed to find summoning location");
+                    }
+                }
+            }
+        }
+    }
+}
+
 // Alembic
 pub fn trigger_alembic(
     mut desk: Query<&mut Spine, With<Desk>>,
@@ -327,7 +456,7 @@ pub fn drink_potion(
     }
 }
 
-// Alembic
+// Journal
 pub fn trigger_journal(
     mut desk: Query<&mut Spine, With<Desk>>,
     mut items: Query<(&DeskItem, &mut DeskItemState)>,
@@ -382,6 +511,88 @@ pub fn read_page(
             if let Some(dna) = journal.completed.pop() {
                 let text = get_lore(&dna);
                 spawn_main_chat_box(&mut commands, &main_chat, &skeletons, "info", text);
+            }
+        }
+    }
+}
+
+// Doorway
+pub fn trigger_doorway(
+    mut desk: Query<&mut Spine, With<Desk>>,
+    mut items: Query<(&DeskItem, &mut DeskItemState)>,
+    mut commands: Commands,
+    demons: Query<(Entity, &Demon)>,
+) {
+    let desk = desk.iter_mut().next();
+    if desk.is_none() {
+        return;
+    }
+    let mut desk = desk.unwrap();
+    if let Some((alembic, mut state)) = items
+        .iter_mut()
+        .find(|(item, _)| matches!(item, DeskItem::Doorway))
+    {
+        if state.user.is_some() {
+            if get_current_animation(&desk, DOORWAY_TRACK).is_none() {
+                desk.animation_state
+                    .set_animation_by_name(DOORWAY_TRACK, "demon_doorway", true);
+            }
+        } else {
+            desk.animation_state.set_empty_animation(JOURNAL_TRACK, 0.);
+        }
+        if let Some(dna) = state.just_completed {
+            state.completed.push(dna);
+            state.just_completed = None;
+            state.progress = 0.0;
+            state.user = None;
+            let despawned =
+                demons.iter().find_map(
+                    |(entity, demon)| {
+                        if demon.dna == dna {
+                            Some(entity)
+                        } else {
+                            None
+                        }
+                    },
+                );
+            if let Some(despawned) = despawned.and_then(|entity| commands.get_entity(entity)) {
+                despawned.despawn_recursive();
+            }
+        }
+    }
+}
+
+pub fn read_card(
+    mut commands: Commands,
+    main_chat: Query<(Entity, &MainChatAttach)>,
+    skeletons: Res<Skeletons>,
+    mut interact_events: EventReader<InteractEvent>,
+    mut items: Query<(&DeskItem, &mut DeskItemState)>,
+) {
+    let journal = items
+        .iter_mut()
+        .find(|(item, _)| matches!(item, DeskItem::Doorway));
+    if journal.is_none() {
+        return;
+    }
+    let (_, mut journal) = journal.unwrap();
+    for event in interact_events.read() {
+        if let InteractEvent {
+            interact_type: InteractType::Press,
+            interactable: Interactable::Doorway,
+            ..
+        } = event
+        {
+            if let Some(dna) = journal.completed.pop() {
+                let name = get_name(&dna);
+                spawn_main_chat_box(
+                    &mut commands,
+                    &main_chat,
+                    &skeletons,
+                    "info",
+                    format!("{}'s calling card is burned into your mind.", name),
+                );
+                CursedConfig::discord().store_cursed_bytes(&dna.0, &name);
             }
         }
     }

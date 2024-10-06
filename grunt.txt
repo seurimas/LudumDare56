@@ -1,6 +1,5 @@
 Sorted list of priorities:
-* Zoom in/out
-* Share demons
+
 
 Demon jobs:
 * Alchemy - create potions

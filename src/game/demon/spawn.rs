@@ -1,8 +1,10 @@
+use imp_encode::CursedConfig;
+
 use crate::prelude::*;
 
-use super::{get_skins, random_genes, DemonBrain, DemonBrainDef};
+use super::{get_name, get_skins, random_genes, DemonBrain, DemonBrainDef};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct DemonDna(pub [u8; 16]);
 
 #[derive(Component)]
@@ -41,6 +43,7 @@ pub fn spawn_demon(
     let brains = brains.get(&game_assets.demon_brain).unwrap().create_tree();
     let mut transform = Transform::from_translation(Vec3::new(position.x, position.y, 0.0));
     transform.scale = Vec3::splat(0.1);
+    let dna = dna.unwrap_or_else(random_genes);
     commands.spawn((
         SpineBundle {
             skeleton,
@@ -56,7 +59,7 @@ pub fn spawn_demon(
         },
         LockedAxes::ROTATION_LOCKED,
         GravityScale(0.0),
-        Demon::from_dna(dna.unwrap_or_else(random_genes)),
+        Demon::from_dna(dna),
         DemonBrain(brains),
         Interactable::Demon,
     ));
