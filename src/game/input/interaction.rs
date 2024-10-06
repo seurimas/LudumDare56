@@ -37,9 +37,9 @@ pub enum InteractType {
 impl Interactable {
     pub fn priority(&self) -> i32 {
         match self {
-            Interactable::Contextable(_) => 50,
-            Interactable::ContextItem => 0,
-            Interactable::Candle(_) => 25,
+            Interactable::ContextItem => 50,
+            Interactable::Candle(_) => 30,
+            Interactable::Contextable(_) => 25,
             Interactable::Backdrop => -100,
         }
     }
@@ -48,7 +48,7 @@ impl Interactable {
         match self {
             Interactable::Contextable(_) => offset.length() < 50.0,
             Interactable::ContextItem => offset.length() < 50.0,
-            Interactable::Candle(_) => offset.length() < 25.0,
+            Interactable::Candle(_) => offset.length() < 15.0,
             Interactable::Backdrop => true,
         }
     }

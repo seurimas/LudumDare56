@@ -1,5 +1,5 @@
 mod assets;
-mod desk;
+mod game;
 mod prelude;
 mod state;
 
@@ -7,7 +7,7 @@ use bevy::window::WindowResolution;
 use bevy_spine::SpinePlugin;
 
 use crate::assets::GameAssetsPlugin;
-use crate::desk::DeskPlugin;
+use crate::game::DeskPlugin;
 use crate::prelude::*;
 
 fn main() -> AppExit {
@@ -20,6 +20,8 @@ fn main() -> AppExit {
             }),
             ..Default::default()
         }))
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugins(RapierDebugRenderPlugin::default())
         .insert_resource(ClearColor(Color::srgb(0., 0., 0.)))
         .init_state::<GameState>()
         .add_plugins((SpinePlugin, GameAssetsPlugin, DeskPlugin))

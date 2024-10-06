@@ -1,7 +1,10 @@
 Sorted list of priorities:
-* Context menus (3 items)
-* Chat/info box
-* Desk layout
+* Initialize demon
+* Walk demon around
+* Grab demon
+* Demon use tools
+* Tools create items
+* Fix glitchy chat box (unhover on enter)
 
 Demon jobs:
 * Alchemy - create potions

@@ -1,7 +1,11 @@
 pub use crate::assets::{GameAssets, Skeletons};
-pub use crate::desk::interaction::{InteractEvent, InteractState, InteractType, Interactable};
-pub use crate::desk::tools::{Desk, DeskItem};
+pub use crate::game::backdrop::Desk;
+pub use crate::game::backdrop::DeskItem;
+pub use crate::game::chat::{spawn_chat_box, ChatBox};
+pub use crate::game::demon::{Demon, DemonController};
+pub use crate::game::input::*;
 pub use crate::state::GameState;
 pub use crate::state::GameState::*;
 pub use bevy::prelude::*;
+pub use bevy_rapier2d::prelude::*;
 pub use bevy_spine::prelude::*;

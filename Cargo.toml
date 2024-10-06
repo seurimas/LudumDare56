@@ -9,8 +9,9 @@ edition = "2021"
 bevy = { version = "0.14", features = ["wav"] }
 rand = "0.8"
 bevy_asset_loader = { version = "0.21", features = ["2d", "standard_dynamic_assets"] }
-bevy_common_assets = { version = "0.11", features = ["ron"] }
+bevy_common_assets = { version = "0.11", features = ["ron", "json"] }
 bevy_spine = "0.10"
+bevy_rapier2d = { version = "0.27", features = [ "simd-stable", "debug-render-2d" ] }
 serde = { version = "1.0", features = ["derive"] }
 unicode-segmentation = "1.10.1"
 postcard = { version = "1.0.4", features = ["alloc"] }
@@ -20,6 +21,7 @@ web-sys = { version = "0.3.61", optional = true }
 wasm-bindgen = { version = "0.2.92", optional = true }
 lazy_static = "1.4.0"
 bevy_quickmenu = { version = "0.5.0", path = "../bevy_quickmenu" }
+behavior-bark = { version = "0.1.0", path = "../behavior-bark", features = ["bevy"] }
 
 [features]
 default = ["non-js"]
