@@ -1,8 +1,14 @@
 use behavior_bark::unpowered::UnpoweredFunctionState;
 
-use crate::{game::DeskItemState, prelude::*};
+use crate::{
+    game::{
+        get_berate, get_complain, get_interrupted, spawn_demon_chat_box, spawn_main_chat_box,
+        DeskItemState, MainChat, MainChatAttach,
+    },
+    prelude::*,
+};
 
-use super::{DemonBrain, DemonModel, Distraction};
+use super::{get_introduction, DemonBrain, DemonModel, Distraction};
 
 pub const DEMON_MAIN_TRACK: usize = 0;
 
@@ -15,6 +21,9 @@ pub fn activate_demons(
     >,
     mut desk_items: Query<(&Transform, &DeskItem, &mut DeskItemState), Without<Demon>>,
     mut velocities: Query<&mut Velocity>,
+    mut commands: Commands,
+    main_chat: Query<(Entity, &MainChatAttach)>,
+    skeletons: Res<Skeletons>,
 ) {
     let desk = desk.iter_mut().next();
     if desk.is_none() {
@@ -22,7 +31,34 @@ pub fn activate_demons(
     }
     let desk = desk.unwrap();
     for (entity, transform, mut demon, mut spine) in query.iter_mut() {
+        if demon.chat_attach.is_none() {
+            // Not initialized yet!
+            continue;
+        }
         match &demon.action {
+            DemonController::Introduce => {
+                if spine
+                    .animation_state
+                    .get_current(DEMON_MAIN_TRACK)
+                    .map(|current| current.animation().name().contains("introduce"))
+                    .unwrap_or(false)
+                {
+                    // Already idle
+                } else {
+                    spine
+                        .animation_state
+                        .set_animation_by_name(DEMON_MAIN_TRACK, "introduce", true)
+                        .expect("Failed to set animation");
+                    let introduction = get_introduction(&demon.dna);
+                    spawn_demon_chat_box(
+                        &mut commands,
+                        &mut demon,
+                        &skeletons,
+                        introduction,
+                        "introduce",
+                    );
+                }
+            }
             DemonController::MoveTo(target) => {
                 if spine
                     .animation_state
@@ -47,6 +83,13 @@ pub fn activate_demons(
                     let direction = direction.truncate();
                     let mut velocity = velocities.get_mut(entity).unwrap();
                     velocity.linvel = direction.normalize() * 100.0;
+                    if direction.x < 0.0 {
+                        let scale = spine.skeleton.scale_x().abs();
+                        spine.skeleton.set_scale_x(-scale);
+                    } else {
+                        let scale = spine.skeleton.scale_x().abs();
+                        spine.skeleton.set_scale_x(scale);
+                    }
                 }
             }
             DemonController::UseTool => {
@@ -117,9 +160,16 @@ pub fn activate_demons(
                                 Vec2::new(rand::random::<f32>() - 0.5, rand::random::<f32>() - 0.5);
                             let mut velocity = velocities.get_mut(entity).unwrap();
                             velocity.linvel = direction.normalize() * 50.0;
+                            if direction.x < 0.0 {
+                                let scale = spine.skeleton.scale_x().abs();
+                                spine.skeleton.set_scale_x(-scale);
+                            } else {
+                                let scale = spine.skeleton.scale_x().abs();
+                                spine.skeleton.set_scale_x(scale);
+                            }
                         }
                     }
-                    Distraction::Complain | Distraction::Berate => {
+                    Distraction::Complain | Distraction::Berate | Distraction::Interrupted => {
                         if spine
                             .animation_state
                             .get_current(DEMON_MAIN_TRACK)
@@ -134,6 +184,20 @@ pub fn activate_demons(
                                 .expect("Failed to set animation");
                             let mut velocity = velocities.get_mut(entity).unwrap();
                             velocity.linvel = Vec2::ZERO;
+                            let text = if something == &Distraction::Berate {
+                                get_berate(&demon.dna)
+                            } else if something == &Distraction::Complain {
+                                get_complain(&demon.dna)
+                            } else {
+                                get_interrupted(&demon.dna)
+                            };
+                            spawn_demon_chat_box(
+                                &mut commands,
+                                &mut demon,
+                                &skeletons,
+                                text,
+                                "complain",
+                            );
                         }
                     }
                     Distraction::Annoyed => {
@@ -253,7 +317,9 @@ pub fn control_demons(
             nearest_tool: demon.nearest_tool,
             using_tool,
         };
-        if matches!(demon.action, DemonController::Distracted(_, _)) {
+        if matches!(demon.action, DemonController::Distracted(_, _))
+            || matches!(demon.action, DemonController::Introduce)
+        {
             continue;
         }
         let result = brains.0.resume_with(&model, &mut demon.action);
@@ -320,11 +386,17 @@ pub fn bother_demons(
                             );
                         }
                     }
+                    DemonController::Introduce => {
+                        demon.action = DemonController::Distracted(
+                            Distraction::Annoyed,
+                            Box::new(DemonController::Idle),
+                        );
+                    }
                     _ => {
                         demon.action = DemonController::Distracted(
                             Distraction::Annoyed,
                             Box::new(DemonController::Distracted(
-                                Distraction::Complain,
+                                Distraction::Interrupted,
                                 Box::new(demon.action.clone()),
                             )),
                         );

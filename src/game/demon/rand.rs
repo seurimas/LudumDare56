@@ -90,10 +90,10 @@ const BODY_SKINS: [&'static str; 2] = ["torsos/eye_see", "torsos/pumpkin"];
 const HAND_SKINS: [&'static str; 2] = ["hands/claws", "hands/bear"];
 const FOOT_SKINS: [&'static str; 2] = ["feet/claws", "feet/bear"];
 
-const HEAD_SKIN_IDX: usize = 12;
-const BODY_SKIN_IDX: usize = 34;
-const HAND_SKIN_IDX: usize = 56;
-const FOOT_SKIN_IDX: usize = 78;
+const HEAD_SKIN_IDX: usize = 2;
+const BODY_SKIN_IDX: usize = 3;
+const HAND_SKIN_IDX: usize = 4;
+const FOOT_SKIN_IDX: usize = 5;
 
 pub fn get_skins(dna: &DemonDna) -> [&'static str; 4] {
     let head_skin = HEAD_SKINS[characteristic(&dna.0, HEAD_SKIN_IDX) as usize % HEAD_SKINS.len()];
@@ -140,20 +140,18 @@ pub fn get_potion_name(dna: &DemonDna) -> &'static str {
     POTION_TYPE[characteristic(&dna.0, POTION_TYPE_IDX) as usize % POTION_TYPE.len()]
 }
 
-pub fn get_potion(dna: &DemonDna) -> [&'static str; 3] {
+pub fn get_potion(dna: &DemonDna) -> String {
     let emotion = POTION_EMOTIONS
         [characteristic(&dna.0, POTION_EMOTION_IDX) as usize % POTION_EMOTIONS.len()];
     let aftertaste = POTION_AFTERTASTES
         [characteristic(&dna.0, POTION_AFTERTASTE_IDX) as usize % POTION_AFTERTASTES.len()];
-    let color =
-        POTION_COLORS[characteristic(&dna.0, POTION_COLOR_IDX) as usize % POTION_COLORS.len()];
-    [emotion, aftertaste, color]
+    format!("{}{}", emotion, aftertaste)
 }
 
-const LORE_TYPE_IDX: usize = 14;
-const LORE_IDX: usize = 14;
-const LORE_QUALITY_IDX: usize = 36;
-const LORE_QUANTITY_IDX: usize = 58;
+const LORE_TYPE_IDX: usize = 6;
+const LORE_IDX: usize = 6;
+const LORE_QUALITY_IDX: usize = 7;
+const LORE_QUANTITY_IDX: usize = 8;
 
 const LORE_QUANTITIES: [&'static str; 4] = [
     "a scrap",
@@ -186,3 +184,104 @@ const LORE_QUALITIES: [&'static str; 16] = [
     "It's a direct copy of something you've already read.",
     "A rude doodle in the corner looks a lot like you.",
 ];
+
+pub fn get_lore(dna: &DemonDna) -> String {
+    let name = get_name(dna);
+    let quantity =
+        LORE_QUANTITIES[characteristic(&dna.0, LORE_QUANTITY_IDX) as usize % LORE_QUANTITIES.len()];
+    let lore = LORES[characteristic(&dna.0, LORE_IDX) as usize % LORES.len()];
+    let quality =
+        LORE_QUALITIES[characteristic(&dna.0, LORE_QUALITY_IDX) as usize % LORE_QUALITIES.len()];
+    format!("{} has written {} {} {}", name, quantity, lore, quality)
+}
+
+const INTRO_GREETING_IDX: usize = 9;
+const INTRO_GREETING: [&'static str; 4] = [
+    "Hello, I am ",
+    "Greetings, I am ",
+    "Salutations, I am ",
+    "Hi, I am ",
+];
+const INTRO_NAME_IDX: usize = 10;
+const INTRO_NAME: [&'static str; 26] = [
+    "Allen", "Billy", "Charles", "David", "Edward", "Frank", "George", "Henry", "Isaac", "John",
+    "Kevin", "Larry", "Michael", "Nathan", "Oscar", "Peter", "Quentin", "Robert", "Samuel",
+    "Thomas", "Ulysses", "Victor", "William", "Xander", "Yuri", "Zachary",
+];
+const INTRO_STINGER_IDX: usize = 11;
+const INTRO_STINGER: [&'static str; 4] = [
+    " and it is your great honor to meet me!",
+    "... I think.",
+    "... and, um... what was I doing?",
+    " and I'm here to... do something?",
+];
+
+pub fn get_name(dna: &DemonDna) -> String {
+    INTRO_GREETING[characteristic(&dna.0, INTRO_GREETING_IDX) as usize % INTRO_GREETING.len()];
+    let name = INTRO_NAME[characteristic(&dna.0, INTRO_NAME_IDX) as usize % INTRO_NAME.len()];
+    name.to_string()
+}
+
+pub fn get_introduction(dna: &DemonDna) -> String {
+    let greeting =
+        INTRO_GREETING[characteristic(&dna.0, INTRO_GREETING_IDX) as usize % INTRO_GREETING.len()];
+    let name = INTRO_NAME[characteristic(&dna.0, INTRO_NAME_IDX) as usize % INTRO_NAME.len()];
+    let stinger =
+        INTRO_STINGER[characteristic(&dna.0, INTRO_STINGER_IDX) as usize % INTRO_STINGER.len()];
+    format!("{}{}{}", greeting, name, stinger)
+}
+
+const BERATE_EXPLETIVE_IDX: usize = 12;
+const BERATE_EXPLETIVE: [&'static str; 4] = ["Nerd!", "Dork!", "Geek!", "Dweeb!"];
+const BERATE_REASON_IDX: usize = 13;
+const BERATE_REASON: [&'static str; 4] = [
+    " You're not even trying!",
+    " Hurry up!",
+    "!!",
+    " You're wasting my time!",
+];
+
+pub fn get_berate(dna: &DemonDna) -> String {
+    let expletive = BERATE_EXPLETIVE
+        [characteristic(&dna.0, BERATE_EXPLETIVE_IDX) as usize % BERATE_EXPLETIVE.len()];
+    let reason =
+        BERATE_REASON[characteristic(&dna.0, BERATE_REASON_IDX) as usize % BERATE_REASON.len()];
+    format!("{}{}", expletive, reason)
+}
+
+const COMPLAIN_EXPLETIVE_IDX: usize = 14;
+const COMPLAIN_EXPLETIVE: [&'static str; 4] = ["Hey!", "Oi!", "Grrr!", "Argh!"];
+const COMPLAIN_REASON_IDX: usize = 15;
+const COMPLAIN_REASON: [&'static str; 4] = [
+    " This place is too cold, can't you turn up the heat!",
+    " I'm bored! Do something interesting!",
+    " I'm hungry! Maybe I should eat you!",
+    " I'm thirsty! Get me some water, you big oaf!",
+];
+
+pub fn get_complain(dna: &DemonDna) -> String {
+    let expletive = COMPLAIN_EXPLETIVE
+        [characteristic(&dna.0, COMPLAIN_EXPLETIVE_IDX) as usize % COMPLAIN_EXPLETIVE.len()];
+    let reason = COMPLAIN_REASON
+        [characteristic(&dna.0, COMPLAIN_REASON_IDX) as usize % COMPLAIN_REASON.len()];
+    format!("{}{}", expletive, reason)
+}
+
+const INTERRUPTED_EXPLETIVE_IDX: usize = 16;
+const INTERRUPTED_EXPLETIVE: [&'static str; 4] =
+    ["What's the big idea!?", "You big oaf!", "Jerk!", "Huh??"];
+const INTERRUPTED_REASON_IDX: usize = 17;
+const INTERRUPTED_REASON: [&'static str; 4] = [
+    " I was in the middle of something!",
+    " You're so rude!",
+    " I was just about to do something!",
+    " I was thinking!",
+];
+
+pub fn get_interrupted(dna: &DemonDna) -> String {
+    let expletive = INTERRUPTED_EXPLETIVE
+        [characteristic(&dna.0, INTERRUPTED_EXPLETIVE_IDX) as usize % INTERRUPTED_EXPLETIVE.len()];
+    let reason = INTERRUPTED_REASON
+        [characteristic(&dna.0, INTERRUPTED_REASON_IDX) as usize % INTERRUPTED_REASON.len()];
+    format!("{}{}", expletive, reason)
+}

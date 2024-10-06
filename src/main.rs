@@ -5,6 +5,7 @@ mod state;
 
 use bevy::window::WindowResolution;
 use bevy_spine::SpinePlugin;
+use game::chat::MainChatAttach;
 
 use crate::assets::GameAssetsPlugin;
 use crate::game::DeskPlugin;
@@ -31,7 +32,11 @@ fn main() -> AppExit {
 }
 
 fn spawn_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands
+        .spawn(Camera2dBundle::default())
+        .with_children(|parent| {
+            parent.spawn((TransformBundle::default(), MainChatAttach));
+        });
 }
 
 fn despawn_camera(mut commands: Commands, query: Query<Entity, With<Camera2d>>) {

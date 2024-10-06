@@ -102,7 +102,10 @@ pub fn initialize_desk(
                 };
                 let interactable = match item {
                     DeskItem::Candle(idx) => Interactable::Candle(idx),
-                    item => Interactable::Contextable(Contextable::DeskItem(item)),
+                    DeskItem::Potion => Interactable::Potion,
+                    DeskItem::Journal => Interactable::Journal,
+                    // item => Interactable::Contextable(Contextable::DeskItem(item)),
+                    _ => Interactable::Backdrop,
                 };
                 commands
                     .entity(*bone)

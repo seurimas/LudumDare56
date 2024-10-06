@@ -32,6 +32,7 @@ impl Plugin for DeskPlugin {
                     handle_summoning_context,
                     trigger_summoning,
                     manage_chat_boxes,
+                    light_candle,
                 )
                     .run_if(in_state(Playing)),
             )
@@ -46,7 +47,10 @@ impl Plugin for DeskPlugin {
                     bother_demons,
                     untask_demons,
                     trigger_alembic,
+                    drink_potion,
                     trigger_journal,
+                    despawn_demon_chat_boxes,
+                    read_page,
                 )
                     .run_if(in_state(Playing)),
             )

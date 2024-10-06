@@ -1,7 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    game::{spawn_demon, AttachedChatBox, DemonBrainDef, DemonDna},
+    game::{
+        get_lore, get_potion, spawn_demon, spawn_main_chat_box, AttachedChatBox, DemonBrainDef,
+        DemonDna,
+    },
     prelude::*,
 };
 
@@ -101,6 +104,40 @@ pub fn handle_summoning_context(
                 }
             }
             _ => continue,
+        }
+    }
+}
+
+pub fn light_candle(
+    mut interact_events: EventReader<InteractEvent>,
+    mut desk: Query<&mut Spine, With<Desk>>,
+) {
+    let desk = desk.iter_mut().next();
+    if desk.is_none() {
+        return;
+    }
+    let mut desk = desk.unwrap();
+    for event in interact_events.read() {
+        if let InteractEvent {
+            interact_type: InteractType::Press,
+            interactable: Interactable::Candle(idx),
+            ..
+        } = event
+        {
+            let bone_name = match idx {
+                0 => "candle0",
+                1 => "candle1",
+                2 => "candle2",
+                3 => "candle3",
+                4 => "candle4",
+                _ => continue,
+            };
+            let mut bone = desk.skeleton.find_bone_mut(bone_name).unwrap();
+            if bone.scale_x() == 0.0 {
+                bone.set_scale(Vec2::new(1., 1.));
+            } else {
+                bone.set_scale(Vec2::new(0., 0.));
+            }
         }
     }
 }
@@ -212,17 +249,71 @@ pub fn trigger_alembic(
         return;
     }
     let mut desk = desk.unwrap();
-    if let Some((alembic, mut state)) = items
+    let dripped = if let Some((alembic, mut state)) = items
         .iter_mut()
         .find(|(item, _)| matches!(item, DeskItem::Alembic))
     {
-        {
-            if let Some(dna) = state.just_completed {
-                println!("Alembic just completed: {:?}", dna);
+        if let Some(dna) = state.just_completed {
+            state.just_completed = None;
+            state.progress = 0.0;
+            state.user = None;
+            Some(dna)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+    if let Some(dna) = dripped {
+        if let Some(mut bone) = desk.skeleton.find_bone_mut("water") {
+            bone.set_scale(Vec2::new(1., 1.));
+        }
+        items.iter_mut().for_each(|(item, mut state)| {
+            if let DeskItem::Potion = item {
                 state.completed.push(dna);
-                state.just_completed = None;
-                state.progress = 0.0;
-                state.user = None;
+            }
+        });
+    }
+}
+
+pub fn drink_potion(
+    mut commands: Commands,
+    main_chat: Query<(Entity, &MainChatAttach)>,
+    skeletons: Res<Skeletons>,
+    mut interact_events: EventReader<InteractEvent>,
+    mut desk: Query<&mut Spine, With<Desk>>,
+    mut items: Query<(&DeskItem, &mut DeskItemState)>,
+) {
+    let desk = desk.iter_mut().next();
+    if desk.is_none() {
+        return;
+    }
+    let mut desk = desk.unwrap();
+    let potion = items
+        .iter_mut()
+        .find(|(item, _)| matches!(item, DeskItem::Potion));
+    if potion.is_none() {
+        return;
+    }
+    let (_, mut potion) = potion.unwrap();
+    for event in interact_events.read() {
+        if let InteractEvent {
+            interact_type: InteractType::Press,
+            interactable: Interactable::Potion,
+            ..
+        } = event
+        {
+            if let Some(potion_dna) = potion.completed.pop() {
+                if let Some(mut bone) = desk.skeleton.find_bone_mut("water") {
+                    bone.set_scale(Vec2::new(0., 0.));
+                    spawn_main_chat_box(
+                        &mut commands,
+                        &main_chat,
+                        &skeletons,
+                        "info",
+                        get_potion(&potion_dna),
+                    );
+                }
             }
         }
     }
@@ -244,11 +335,39 @@ pub fn trigger_journal(
     {
         {
             if let Some(dna) = state.just_completed {
-                println!("Journal just completed: {:?}", dna);
                 state.completed.push(dna);
                 state.just_completed = None;
                 state.progress = 0.0;
                 state.user = None;
+            }
+        }
+    }
+}
+
+pub fn read_page(
+    mut commands: Commands,
+    main_chat: Query<(Entity, &MainChatAttach)>,
+    skeletons: Res<Skeletons>,
+    mut interact_events: EventReader<InteractEvent>,
+    mut items: Query<(&DeskItem, &mut DeskItemState)>,
+) {
+    let journal = items
+        .iter_mut()
+        .find(|(item, _)| matches!(item, DeskItem::Journal));
+    if journal.is_none() {
+        return;
+    }
+    let (_, mut journal) = journal.unwrap();
+    for event in interact_events.read() {
+        if let InteractEvent {
+            interact_type: InteractType::Press,
+            interactable: Interactable::Journal,
+            ..
+        } = event
+        {
+            if let Some(dna) = journal.completed.pop() {
+                let text = get_lore(&dna);
+                spawn_main_chat_box(&mut commands, &main_chat, &skeletons, "info", text);
             }
         }
     }

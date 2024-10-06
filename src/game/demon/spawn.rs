@@ -12,6 +12,8 @@ pub struct Demon {
     pub action: DemonController,
     pub in_area_for_tool: Option<DeskItem>,
     pub nearest_tool: DeskItem,
+    pub chatting: Option<(&'static str)>,
+    pub chat_attach: Option<Entity>,
 }
 
 impl Demon {
@@ -19,9 +21,11 @@ impl Demon {
         Self {
             dna,
             nonce: 0,
-            action: DemonController::MoveTo(DeskItem::Alembic),
+            action: DemonController::Introduce,
             in_area_for_tool: None,
             nearest_tool: DeskItem::Summoning,
+            chatting: None,
+            chat_attach: None,
         }
     }
 }
@@ -47,7 +51,7 @@ pub fn spawn_demon(
         Restitution::coefficient(0.1),
         Collider::ball(100.),
         Velocity {
-            linvel: Vec2::new(100.0, 0.0),
+            linvel: Vec2::new(0.0, 0.0),
             ..Default::default()
         },
         LockedAxes::ROTATION_LOCKED,
@@ -73,6 +77,9 @@ pub fn initialize_demon(
                 .skeleton
                 .set_skins_by_name(&conglomerate_skin, skins)
                 .expect("Failed to set skin");
+            if let Some(bone_entity) = event.bones.get("chat") {
+                demon.chat_attach = Some(*bone_entity);
+            }
         }
     }
 }

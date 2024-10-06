@@ -15,6 +15,7 @@ pub struct DemonModel {
 
 #[derive(Component, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum DemonController {
+    Introduce,
     Idle,
     MoveTo(DeskItem),
     UseTool,
@@ -83,16 +84,13 @@ impl UnpoweredFunction for DemonBehavior {
                     if let Some(time) = model.using_tool {
                         let target_time = tool_time(&model.dna, model.nonce, 2., 8.);
                         if time < target_time {
-                            println!("Using tool for {:.2}s", time);
                             *controller = DemonController::UseTool;
                             UnpoweredFunctionState::Waiting
                         } else {
-                            println!("Finished using tool");
                             *controller = DemonController::FinishJob;
                             UnpoweredFunctionState::Complete
                         }
                     } else {
-                        println!("Using tool");
                         *controller = DemonController::UseTool;
                         UnpoweredFunctionState::Waiting
                     }
@@ -123,6 +121,7 @@ impl UnpoweredFunction for DemonBehavior {
 pub enum Distraction {
     Berate,
     Complain,
+    Interrupted,
     Sleep,
     Annoyed,
     Wander,
@@ -131,11 +130,12 @@ pub enum Distraction {
 impl Distraction {
     pub fn gene_idx(&self) -> usize {
         match self {
-            Distraction::Complain => 0,
-            Distraction::Sleep => 1,
-            Distraction::Annoyed => 2,
-            Distraction::Wander => 3,
+            Distraction::Complain => 255,
+            Distraction::Sleep => 254,
+            Distraction::Annoyed => 253,
+            Distraction::Wander => 252,
             Distraction::Berate => unreachable!(),
+            Distraction::Interrupted => unreachable!(),
         }
     }
 
@@ -146,6 +146,7 @@ impl Distraction {
             Distraction::Annoyed => 0.9,
             Distraction::Wander => 0.9,
             Distraction::Berate => unreachable!(),
+            Distraction::Interrupted => unreachable!(),
         }
     }
 }

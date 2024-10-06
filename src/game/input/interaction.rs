@@ -14,6 +14,8 @@ pub enum Interactable {
     Contextable(Contextable),
     ContextItem,
     Candle(usize),
+    Journal,
+    Potion,
     Demon,
     Backdrop,
 }
@@ -40,6 +42,7 @@ impl Interactable {
         match self {
             Interactable::ContextItem => 50,
             Interactable::Demon => 40,
+            Interactable::Potion | Interactable::Journal => 35,
             Interactable::Candle(_) => 30,
             Interactable::Contextable(_) => 25,
             Interactable::Backdrop => -100,
@@ -50,8 +53,10 @@ impl Interactable {
         match self {
             Interactable::Contextable(_) => offset.length() < 50.0,
             Interactable::Demon => offset.length() < 25.0,
+            Interactable::Potion => offset.length() < 25.0,
+            Interactable::Journal => offset.length() < 35.0,
             Interactable::ContextItem => offset.length() < 50.0,
-            Interactable::Candle(_) => offset.length() < 5.0,
+            Interactable::Candle(_) => offset.length() < 15.0,
             Interactable::Backdrop => true,
         }
     }

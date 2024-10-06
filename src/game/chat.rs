@@ -2,6 +2,8 @@ use bevy::text::Text2dBounds;
 
 use crate::prelude::*;
 
+use super::DEMON_MAIN_TRACK;
+
 #[derive(Component)]
 pub struct ChatBox {
     pub style: &'static str,
@@ -12,6 +14,9 @@ pub struct ChatBox {
 
 #[derive(Component, Clone)]
 pub struct AttachedChatBox(pub Entity);
+
+#[derive(Component)]
+pub struct MainChatAttach;
 
 impl ChatBox {
     pub fn info(attachment: Entity, text: String) -> Self {
@@ -139,6 +144,64 @@ pub fn manage_chat_boxes(
                 });
             } else {
                 println!("Failed to find text_attach bone");
+            }
+        }
+    }
+}
+
+pub type MainChat<'w, 's> = (
+    Commands<'w, 's>,
+    Query<'w, 's, (Entity, &'w MainChatAttach)>,
+    Res<'w, Skeletons>,
+);
+
+pub fn spawn_main_chat_box(
+    commands: &mut Commands,
+    main_chat: &Query<(Entity, &MainChatAttach)>,
+    skeletons: &Skeletons,
+    style: &'static str,
+    text: String,
+) {
+    let chat_box = ChatBox {
+        style,
+        attachment: main_chat.iter().next().unwrap().0,
+        text_entity: None,
+        text,
+    };
+    spawn_chat_box(commands, skeletons.chat.clone(), chat_box);
+}
+
+pub fn spawn_demon_chat_box(
+    commands: &mut Commands,
+    demon: &mut Demon,
+    skeletons: &Skeletons,
+    text: String,
+    chat_state: &'static str,
+) {
+    let chat_box = ChatBox::talk(demon.chat_attach.unwrap(), text);
+    spawn_chat_box(commands, skeletons.chat.clone(), chat_box);
+    demon.chatting = Some(chat_state);
+}
+
+pub fn despawn_demon_chat_boxes(
+    mut commands: Commands,
+    demons: Query<(&Demon, &Spine)>,
+    attachment: Query<(&AttachedChatBox)>,
+) {
+    for (demon, spine) in demons.iter() {
+        if let Some(AttachedChatBox(chat)) =
+            demon.chat_attach.and_then(|id| attachment.get(id).ok())
+        {
+            if demon.chatting.is_none() {
+                commands
+                    .get_entity(*chat)
+                    .map(|chat| chat.despawn_recursive());
+            } else if demon.chatting.map(|str| str.to_string())
+                != get_current_animation(spine, DEMON_MAIN_TRACK)
+            {
+                commands
+                    .get_entity(*chat)
+                    .map(|chat| chat.despawn_recursive());
             }
         }
     }
