@@ -54,6 +54,7 @@ pub fn spawn_demon(
         GravityScale(0.0),
         Demon::from_dna(dna.unwrap_or_else(random_genes)),
         DemonBrain(brains),
+        Interactable::Demon,
     ));
 }
 

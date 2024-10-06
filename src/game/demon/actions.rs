@@ -86,14 +86,45 @@ pub fn activate_demons(
                             let direction =
                                 Vec2::new(rand::random::<f32>() - 0.5, rand::random::<f32>() - 0.5);
                             let mut velocity = velocities.get_mut(entity).unwrap();
-                            velocity.linvel = direction.normalize() * 100.0;
+                            velocity.linvel = direction.normalize() * 50.0;
                         }
                     }
                     Distraction::Complain => {
-                        // TODO
+                        if spine
+                            .animation_state
+                            .get_current(DEMON_MAIN_TRACK)
+                            .map(|current| current.animation().name().contains("complain"))
+                            .unwrap_or(false)
+                        {
+                            // Already complaining
+                        } else {
+                            spine
+                                .animation_state
+                                .set_animation_by_name(DEMON_MAIN_TRACK, "complain", true)
+                                .expect("Failed to set animation");
+                            let mut velocity = velocities.get_mut(entity).unwrap();
+                            velocity.linvel = Vec2::ZERO;
+                        }
                     }
                     Distraction::Annoyed => {
-                        // TODO
+                        if spine
+                            .animation_state
+                            .get_current(DEMON_MAIN_TRACK)
+                            .map(|current| current.animation().name().contains("hit"))
+                            .unwrap_or(false)
+                        {
+                            // Already annoyed
+                        } else {
+                            spine
+                                .animation_state
+                                .set_animation_by_name(DEMON_MAIN_TRACK, "hit", false)
+                                .expect("Failed to set animation");
+                            spine
+                                .animation_state
+                                .add_empty_animation(DEMON_MAIN_TRACK, 0., 0.);
+                            let mut velocity = velocities.get_mut(entity).unwrap();
+                            velocity.linvel = Vec2::ZERO;
+                        }
                     }
                 }
             }
@@ -172,6 +203,72 @@ pub fn control_demons(mut query: Query<(&mut Demon, &mut DemonBrain)>) {
                 demon.nonce += 1;
             }
             UnpoweredFunctionState::Waiting => {}
+        }
+    }
+}
+
+pub fn untask_demons(
+    mut query: Query<(&mut Demon, &mut Spine)>,
+    mut events: EventReader<SpineEvent>,
+) {
+    for event in events.read() {
+        if let SpineEvent::Complete {
+            entity, animation, ..
+        } = event
+        {
+            if let Ok((mut demon, mut spine)) = query.get_mut(*entity) {
+                match animation.as_str() {
+                    "hit" => {
+                        if let DemonController::Distracted(Distraction::Annoyed, real_task) =
+                            &demon.action
+                        {
+                            demon.action = *real_task.clone();
+                        }
+                    }
+                    "walk" => {
+                        demon.action = DemonController::Idle;
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+}
+
+pub fn bother_demons(
+    mut query: Query<(&mut Demon, &mut Spine)>,
+    mut events: EventReader<InteractEvent>,
+) {
+    for event in events.read() {
+        if let InteractEvent {
+            interact_type: InteractType::Press,
+            interactable: Interactable::Demon,
+            entity,
+            ..
+        } = event
+        {
+            println!("Bothering demon");
+            if let Ok((mut demon, mut spine)) = query.get_mut(*entity) {
+                match &demon.action {
+                    DemonController::Distracted(distraction, real_task) => {
+                        if distraction != &Distraction::Annoyed {
+                            demon.action = DemonController::Distracted(
+                                Distraction::Annoyed,
+                                real_task.clone(),
+                            );
+                        }
+                    }
+                    _ => {
+                        demon.action = DemonController::Distracted(
+                            Distraction::Annoyed,
+                            Box::new(DemonController::Distracted(
+                                Distraction::Complain,
+                                Box::new(demon.action.clone()),
+                            )),
+                        );
+                    }
+                }
+            }
         }
     }
 }

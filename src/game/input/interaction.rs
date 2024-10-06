@@ -14,6 +14,7 @@ pub enum Interactable {
     Contextable(Contextable),
     ContextItem,
     Candle(usize),
+    Demon,
     Backdrop,
 }
 
@@ -38,6 +39,7 @@ impl Interactable {
     pub fn priority(&self) -> i32 {
         match self {
             Interactable::ContextItem => 50,
+            Interactable::Demon => 40,
             Interactable::Candle(_) => 30,
             Interactable::Contextable(_) => 25,
             Interactable::Backdrop => -100,
@@ -47,8 +49,9 @@ impl Interactable {
     pub fn in_range(&self, offset: Vec2) -> bool {
         match self {
             Interactable::Contextable(_) => offset.length() < 50.0,
+            Interactable::Demon => offset.length() < 25.0,
             Interactable::ContextItem => offset.length() < 50.0,
-            Interactable::Candle(_) => offset.length() < 15.0,
+            Interactable::Candle(_) => offset.length() < 5.0,
             Interactable::Backdrop => true,
         }
     }

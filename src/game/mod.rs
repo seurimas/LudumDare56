@@ -43,6 +43,8 @@ impl Plugin for DeskPlugin {
                     mark_demons_in_area,
                     control_demons,
                     activate_demons,
+                    bother_demons,
+                    untask_demons,
                 )
                     .run_if(in_state(Playing)),
             )

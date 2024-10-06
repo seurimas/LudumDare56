@@ -1,7 +1,4 @@
 Sorted list of priorities:
-* Initialize demon
-* Walk demon around
-* Grab demon
 * Demon use tools
 * Tools create items
 * Fix glitchy chat box (unhover on enter)

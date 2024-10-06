@@ -83,7 +83,9 @@ pub fn manage_chat_boxes(
     for (entity, chat_box) in chat_box.iter() {
         if let Ok(_global) = globals.get(chat_box.attachment) {
         } else {
-            commands.entity(entity).despawn_recursive();
+            if let Some(entity) = commands.get_entity(entity) {
+                entity.despawn_recursive();
+            }
         }
     }
 
